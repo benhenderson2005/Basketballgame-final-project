@@ -1,0 +1,117 @@
+import pygame
+import sys
+from pygame.locals import *
+
+pygame.init()
+screen_width = 600
+screen_height = 600
+game_display = pygame.display.set_mode((screen_width, screen_height))
+pygame.display.set_caption('Basketball game by Ben')
+clock = pygame.time.Clock()
+
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+
+final_screen = pygame.display.set_mode((600, 600))
+
+bg = pygame.image.load("bballcourt2.jpg")
+bg = pygame.transform.scale(bg, (600, 600))
+
+stance1 = pygame.image.load("player1.jpg")
+stance1 = pygame.transform.scale(stance1, (45, 45))
+stance1 = pygame.transform.rotate(stance1, 90)
+
+stance2 = pygame.image.load("player2.jpg")
+stance2 = pygame.transform.scale(stance2, (45, 45))
+stance2 = pygame.transform.rotate(stance2, 90)
+
+bball = pygame.image.load("ball.jpg")
+bball = pygame.transform.scale(bball, (45, 45))
+
+font = pygame.font.Font(None, 36)
+
+line_length = screen_height // 10
+line_start = (500, 150)
+line_end = (500, 220)
+
+timer = pygame.USEREVENT + 1                                                
+pygame.time.set_timer(timer, 1000)
+
+def maingame():
+    timer_font = pygame.font.Font(None, 38)
+    timer_sec = 30
+    timer_text = timer_font.render("01:00", True, BLACK)
+    
+    circle_radius = 8
+    circle_x = 500
+    circle_y = 200
+    circle_speed = 3
+    direction = 1
+    
+    score = 0
+    
+    final_screen_shown = False
+    running = True
+
+        
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+                sys.exit()
+            if event.type == timer:    
+                if timer_sec > 0:
+                    timer_sec -= 1
+                    timer_text = timer_font.render("00:%02d" % timer_sec, True, (0, 0, 0))
+                else:
+                    final_screen_shown = True
+
+        game_display.blit(bg, (0, 0))
+        game_display.blit(stance1, (545, 170))
+        
+        text_surface = font.render("Score: "+str(score), True, (0, 0, 0))
+        text_rect = text_surface.get_rect(center=(530, 90))
+        game_display.blit(text_surface, text_rect)
+
+        text_surface = font.render("Time left: "+ str(timer_sec), True, BLACK)
+        text_rect = text_surface.get_rect(center=(510, 60))
+        game_display.blit(text_surface, text_rect)
+
+        
+        pygame.draw.line(game_display, BLACK, line_start, line_end, 2)
+        pygame.draw.circle(game_display, WHITE, (circle_x, circle_y), circle_radius)
+        circle_y += circle_speed * direction
+        if circle_y + circle_radius >= line_end[1]: 
+            direction = -1
+        elif circle_y - circle_radius <= line_start[1]:
+            direction = 1
+            
+        mouse_pressed = pygame.mouse.get_pressed()[0]
+        if circle_y >= 184 and circle_y <= 186 and mouse_pressed:
+            score += 1
+            game_display.blit(stance2, (545, 170))
+            game_display.blit(bball, (275, 155))
+        elif circle_y < 184 and mouse_pressed:
+            game_display.blit(stance2, (545, 170))
+            game_display.blit(bball, (275, 190))
+        elif circle_y > 186 and mouse_pressed:
+            game_display.blit(stance2, (545, 170))
+            game_display.blit(bball, (350, 130))
+        if final_screen_shown:
+            final_screen.fill(WHITE)
+            text_surface = font.render("Press SPACE to play again", True, BLACK)
+            text_rect = text_surface.get_rect(center=(300, 100))
+            game_display.blit(text_surface, text_rect)
+            text_surface = font.render("Final Score: "+ str(score), True, BLACK)
+            text_rect = text_surface.get_rect(center=(300, 300))
+            game_display.blit(text_surface, text_rect)
+            
+            for event in pygame.event.get():
+                if event.type == pygame.KEYDOWN:
+                     if event.key == pygame.K_SPACE:
+                         maingame()
+        
+        pygame.display.update()
+        clock.tick(60)
+if __name__ == "__main__":
+    maingame()
